@@ -336,6 +336,80 @@ for x in range(len(ipg)):
     list_ipg_lacp.append(ipg[x].lacp)
     list_ipg_mcp.append(ipg[x].mcp)
 
+#CLASS FOR EPG
+bd_vrf = {}
+epg = []
+list_epg_tenant = []
+list_epg_des = []
+list_epg_vrf = []
+list_epg_bd = []
+list_epg_anp = []
+list_epg_epg = []
+list_epg_path = []
+list_epg_dom = []
+
+class EPG:
+    def __init__(self,tenant,des,vrf,bd,anp,epg,path,dom):   
+        self.tenant = tenant
+        self.des = des
+        self.vrf = vrf
+        self.bd = bd
+        self.anp = anp
+        self.epg = epg
+        self.path = path
+        self.dom = dom
+  
+for x in data["polUni"]["children"]:
+    epg_tenant = ''
+    epg_des = ''
+    epg_vrf = ''
+    epg_bd = ''
+    epg_anp = ''
+    epg_name = ''
+    epg_path = ''
+    epg_dom = ''
+    if x.get('fvTenant') is not None:
+        epg_tenant = x["fvTenant"]["attributes"]["name"]
+        for y in x["fvTenant"]["children"]:
+            if y.get('fvBD') is not None:
+                for q in y['fvBD']['children']:
+                    if q.get('fvRsCtx') is not None:
+                        bd_key = y['fvBD']['attributes']['name']
+                        vrf_value = q['fvRsCtx']['attributes']['tnFvCtxName']
+                        #print(bd_key + ":" + vrf_value)
+                        bd_vrf[bd_key] = vrf_value
+    if x.get('fvTenant') is not None:
+        epg_tenant = x["fvTenant"]["attributes"]["name"]
+        for y in x["fvTenant"]["children"]:
+            if y.get('fvAp') is not None:
+                epg_anp = y['fvAp']['attributes']['name']
+                if y['fvAp'].get('children') is not None:
+                    for z in y['fvAp']['children']:
+                        if z.get('fvAEPg') is not None:
+                            epg_name = z['fvAEPg']['attributes']['name']
+                            epg_des = z['fvAEPg']['attributes']['descr']
+                            if z['fvAEPg'].get('children') is not None:
+                                epg_path = ''
+                                for c in z['fvAEPg']['children']:
+                                    if c.get('fvRsPathAtt') is not None:
+                                        epg_path = epg_path + c['fvRsPathAtt']['attributes']['tDn'] + "/" + c['fvRsPathAtt']['attributes']['encap'] + "\n"
+                                    if c.get('fvRsDomAtt') is not None:
+                                        epg_dom = c['fvRsDomAtt']['attributes']['tDn']
+                                    if c.get('fvRsBd') is not None:
+                                        epg_bd = c['fvRsBd']['attributes']['tnFvBDName']
+                                        epg_vrf = bd_vrf[epg_bd]
+                                epg.append(EPG(epg_tenant,epg_des,epg_vrf,epg_bd,epg_anp,epg_name,epg_path,epg_dom))
+                                
+for x in range(len(epg)):
+    list_epg_tenant.append(epg[x].tenant)
+    list_epg_des.append(epg[x].des)
+    list_epg_vrf.append(epg[x].vrf)
+    list_epg_bd.append(epg[x].bd)
+    list_epg_anp.append(epg[x].anp)
+    list_epg_epg.append(epg[x].epg)
+    list_epg_path.append(epg[x].path)
+    list_epg_dom.append(epg[x].dom)
+                                
 now = datetime.now() 
 # current date and time
 date_time = now.strftime("%d-%m-%Y_%H-%M")
@@ -345,6 +419,8 @@ sheet2 = pd.DataFrame({'tenant': list_bd_tenant,'vrf': list_bd_vrf,'name': list_
 sheet3 = pd.DataFrame({'name': list_ipg_name,'switch_type': list_ipg_switch_type,'interface_policy_group_type': list_ipg_interface_policy_group_type,'aaep': list_ipg_aaep,'link_pol': list_ipg_link,'cdp_pol':list_ipg_cdp,'lldp_pol':list_ipg_lldp,'stp_pol':list_ipg_stp,'lacp_pol':list_ipg_lacp,'mcp_pol':list_ipg_mcp})
 sheet4 = pd.DataFrame({'name': list_spf_name,'description': list_spf_des,'switch_profile_type': list_spf_types,'switch_selector': list_spf_selector,'from_node_id': list_spf_from_node,'to_node_id':list_spf_to_node})
 sheet5 = pd.DataFrame({'name': list_vpc_name,'left_node_id': list_vpc_left_node,'right_node_id': list_vpc_right_node,'logical_pair_id': list_vpc_pair_id})
+sheet6 = pd.DataFrame({'Tenant':list_epg_tenant,'Description':list_epg_des,'VRF':list_epg_vrf,'BridgeDomain':list_epg_bd,'ANP':list_epg_anp,'EPG':list_epg_epg,'Path':list_epg_path,'Domain':list_epg_dom})
+sheet6.Path.str.split("\n", expand=True).stack()
 # Create a Pandas Excel writer using XlsxWriter as the engine.
 writer = pd.ExcelWriter(f"ACI Infomation {date_time}.xlsx", engine='xlsxwriter')
 # Write each dataframe to a different worksheet.
@@ -353,5 +429,6 @@ sheet2.to_excel(writer, sheet_name='Bridge Domain')
 sheet3.to_excel(writer, sheet_name='interface_policy_group')
 sheet4.to_excel(writer, sheet_name='switch_profile')
 sheet5.to_excel(writer, sheet_name='vpc_domain')
+sheet6.to_excel(writer, sheet_name='EPG_path')
 # Close the Pandas Excel writer and output the Excel file.
 writer.save()    
