@@ -58,10 +58,8 @@ for i in data["polUni"]["children"]:
                     if k.get('mgmtOoB') is not None:
                         for l in k["mgmtOoB"]["children"]:
                             if l.get('mgmtRsOoBStNode') is not None:
-                                #topology/pod-1/node-1201
                                 fullstring = l["mgmtRsOoBStNode"]["attributes"]["tDn"]
                                 for check_oobv4 in range(len(inventory)):
-                                    #1201
                                     substring = inventory[check_oobv4].id
                                     if substring in fullstring:
                                         inventory[check_oobv4].oonv4 = l["mgmtRsOoBStNode"]["attributes"]["addr"]
@@ -94,7 +92,6 @@ class SPF:
         self.from_node = from_node
         self.to_node = to_node
 
-#count = int(len(data["polUni"]["children"][22]["infraInfra"]["children"]))
 for q in data["polUni"]["children"]:
     if q.get('infraInfra') is not None:
        for x in q["infraInfra"]["children"]:
@@ -199,7 +196,7 @@ class BD:
 
 
 count = int(len(data["polUni"]["children"]))
-      #BD
+#BD
 for x in data["polUni"]["children"]:
     bd_name = ''
     bd_des = ''
@@ -263,10 +260,6 @@ class IPG:
         self.lacp = lacp
         self.mcp = mcp
         
-#count = int(len(data["polUni"]["children"][22]["infraInfra"]["children"][1233]["infraFuncP"]["children"]))
-
-#infraAccBndlGrp = vPC
-#infraAccPortGrp = Access
 for x in data["polUni"]["children"]: 
     ipg_name = ''
     ipg_interface_policy_group_type = ''
